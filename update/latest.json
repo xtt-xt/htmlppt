@@ -2,6 +2,6 @@
   "app": "1.0.0",
   "hot": "2026.08.26.3",
   "notes": "更新内容 v1.0.0-h2026.08.26.3\n- 关于页按钮布局优化（检查更新置顶、导入/同步并列）\n- 检查更新 / 导入热更新包 功能上线\n- 版本号 v主版本(h热更新) 显示",
-  "apk_url": "https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/HTML_PPT-v1.0.0.apk",
-  "hot_url": "https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/hotpatch.zip"
+  "apk_url": "https://cdn.jsdelivr.net/gh/xtt-xt/htmlppt@main/update/HTML_PPT-v1.0.0.apk",
+  "hot_url": "https://cdn.jsdelivr.net/gh/xtt-xt/htmlppt@main/update/hotpatch.zip"
 }
