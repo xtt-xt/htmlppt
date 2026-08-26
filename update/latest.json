@@ -2,6 +2,6 @@
   "app": "1.0.0",
   "hot": "2026.08.26.4",
   "notes": "更新内容 v1.0.0-h2026.08.26.4\n- 新增：每天首次打开自动检查更新（静默，仅在有更新时提醒）\n- 新增：热更新成功后自动回到主页\n- 版本号统一为全局 window.HOT_VERSION",
-  "apk_url": "https://cdn.jsdelivr.net/gh/xtt-xt/htmlppt@main/update/HTML_PPT-v1.0.0.apk",
+  "apk_url": "https://github.com/xtt-xt/htmlppt/releases/download/v1.0.0/HTML_PPT-v1.0.0.apk",
   "hot_url": "https://cdn.jsdelivr.net/gh/xtt-xt/htmlppt@main/update/hotpatch.zip"
 }
