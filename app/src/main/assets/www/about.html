@@ -37,7 +37,11 @@
       <p id="ver-info" style="white-space:pre-line;">App 版本：1.0.0<br>热更新版本：2026.08.26.1</p>
     </div>
 
-    <button class="tbtn primary" id="sync-btn" style="width:100%;margin-bottom:14px;">同步内置 HTML</button>
+    <button class="tbtn primary" id="check-btn" style="width:100%;margin-bottom:10px;">检查更新</button>
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <button class="tbtn ghost" id="import-btn" style="flex:1;">导入热更新包</button>
+      <button class="tbtn ghost" id="sync-btn" style="flex:1;">同步内置 HTML</button>
+    </div>
 
     <div class="sect">
       <h3>什么是 HTML PPT</h3>
@@ -69,13 +73,53 @@
   PPT.applyGlobalTheme(PPT.settings.theme || 'aurora');
   // 版本信息
   var and = window.Android;
-  var HOT_VERSION = '2026.08.26.1';
+  var HOT_VERSION = '2026.08.26.2';
   var verBox = document.getElementById('ver-info');
   var appVer = '1.0.0';
   if (and && and.getVersion) {
     try { var v = JSON.parse(and.getVersion()); appVer = v.app || appVer; } catch (e) { }
   }
-  verBox.textContent = 'App 版本：' + appVer + '\n热更新版本：' + HOT_VERSION;
+  verBox.textContent = 'v' + appVer + ' (h' + HOT_VERSION + ')';
+  var UPDATE_URL = 'https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/latest.json';
+  var WWW_DIR = '/sdcard/HTML_PPT/www';
+  var ZIP_PATH = '/sdcard/HTML_PPT/Download/hotpatch.zip';
+  // 检查更新
+  document.getElementById('check-btn').onclick = function(){
+    var btn = this; btn.textContent = '检查中…';
+    setTimeout(function(){
+      var body = (and && and.checkRemote) ? and.checkRemote(UPDATE_URL) : '';
+      btn.textContent = '检查更新';
+      if (!body) { window.auroraAlert('无法获取更新信息（请检查网络或更新源）'); return; }
+      var info; try { info = JSON.parse(body); } catch (e) { window.auroraAlert('更新数据解析失败'); return; }
+      if (info.app !== appVer) {
+        window.auroraConfirm('发现新主版本 v' + info.app + '（当前 v' + appVer + '）\n请前往下载并安装最新版 App。', function(){
+          (and && and.openUrl) ? and.openUrl(info.apk_url || '') : window.auroraAlert('无法打开下载');
+        });
+      } else if (info.hot && info.hot !== HOT_VERSION) {
+        window.auroraConfirm('发现热更新 h' + info.hot + '（当前 h' + HOT_VERSION + '）\n\n【更新内容】\n' + info.notes + '\n\n是否下载并应用？', function(){
+          var r = (and && and.downloadApply) ? and.downloadApply(info.hot_url || '', WWW_DIR) : 'err:no';
+          if (r && r.indexOf('ok:') === 0) {
+            window.auroraAlert('热更新应用成功：' + r);
+            setTimeout(function(){ location.reload(); }, 600);
+          } else {
+            window.auroraAlert('自动下载失败（' + r + '）\n请下载 hotpatch.zip 放到 /sdcard/HTML_PPT/Download/ 后点「导入热更新包」。');
+          }
+        });
+      } else {
+        window.auroraAlert('已是最新版本！');
+      }
+    }, 60);
+  };
+  // 导入热更新包
+  document.getElementById('import-btn').onclick = function(){
+    var r = (and && and.importZip) ? and.importZip(ZIP_PATH) : 'err:no';
+    if (r && r.indexOf('ok:') === 0) {
+      window.auroraAlert('导入成功：' + r);
+      setTimeout(function(){ location.reload(); }, 600);
+    } else {
+      window.auroraAlert('导入失败（' + r + '）\n请把 hotpatch.zip 放到 /sdcard/HTML_PPT/Download/');
+    }
+  };
   // 同步内置 HTML
   document.getElementById('sync-btn').onclick = function(){
     window.auroraConfirm('同步内置 HTML 会把界面文件覆盖为 App 内置默认版本，可能回退你之前的【热更新】改动。确定继续？', function(){

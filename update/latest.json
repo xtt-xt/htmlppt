@@ -1,7 +1,7 @@
 {
   "app": "1.0.0",
-  "hot": "2026.08.26.1",
-  "notes": "HTML PPT 更新内容\n- 关于页新增：检查更新 / 同步内置HTML\n- 版本号以主版本-热更新版本显示 (v1.0.0 h2026.08.26.1)\n- 卡片分块、文字缩放、进度条动画、图标接入等",
+  "hot": "2026.08.26.2",
+  "notes": "更新内容 v1.0.0-h2026.08.26.2\n- 关于页按钮布局优化：检查更新置顶、导入/同步并列\n- 新增检查更新 / 导入热更新包 功能\n- 版本号 v主版本(h热更新) 显示",
   "apk_url": "https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/HTML_PPT-v1.0.0.apk",
   "hot_url": "https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/hotpatch.zip"
 }
