@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>设置 - HTML PPT</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  input[type=color]{width:48px;height:38px;border:none;background:none;cursor:pointer;padding:0;}
+  .color-row{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .color-row label{font-size:13px; color:var(--muted); width:70px;}
+  .custom-list{margin:14px 0;}
+  .custom-item{display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:10px;}
+  .custom-item .dots{display:flex; gap:3px;}
+  .custom-item .dots span{width:14px;height:14px;border-radius:50%;}
+  .custom-item .nm{flex:1; font-size:15px;}
+  .section{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:18px;}
+  .section h2{font-size:17px; margin-bottom:12px;}
+  .swatches{display:flex; align-items:center; gap:8px;}
+  .sw-cur{width:44px;height:32px;border-radius:9px;border:1px solid rgba(255,255,255,.25);cursor:pointer;display:inline-block;box-shadow:inset 0 0 0 2px rgba(255,255,255,.06);flex:none;}
+  .sw-hex{font-size:12px;color:var(--muted);letter-spacing:.5px;cursor:pointer;font-family:Consolas,monospace;}
+  .sw-hex:hover{color:var(--text);}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px;}
+  /* ---- 色盘取色弹窗（主页 modal 样式） ---- */
+  .cp-preview{width:100%;height:46px;border-radius:10px;border:1px solid var(--border);margin-bottom:14px;}
+  .cp-wheel{width:180px;height:180px;border-radius:50%;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);position:relative;margin:0 auto 16px;border:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);touch-action:none;}
+  .cp-dot{position:absolute;width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.55);transform:translate(-50%,-50%);pointer-events:none;z-index:2;background:#fff;}
+  .cp-sv{width:180px;height:120px;border-radius:12px;position:relative;margin:0 auto 14px;border:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);touch-action:none;overflow:hidden;}
+  .cp-hex-row{display:flex;align-items:center;gap:10px;margin-top:4px;}
+  .cp-hex-label{font-size:12px;color:var(--muted);flex:none;}
+  .cp-hex{flex:1;background:rgba(0,0,0,.28);border:1px solid var(--border);border-radius:8px;color:var(--text);text-align:center;padding:9px;font-size:15px;letter-spacing:1px;}
+  .cp-rgb{margin-top:4px;}
+  .cp-rgb-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .cp-rgb-row label{font-size:12px;color:var(--muted);width:16px;text-align:center;flex:none;}
+  .cp-rgb-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:8px;border-radius:4px;background:rgba(255,255,255,.12);outline:none;}
+  .cp-rgb-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+  .cp-rgb-row input[type=number]{width:52px;background:rgba(0,0,0,.28);border:1px solid var(--border);border-radius:6px;color:var(--text);text-align:center;padding:6px;flex:none;}
+</style>
+</head>
+<body class="noselect">
+
+<div class="topbar">
+  <button class="tbtn ghost" id="back-btn">返回</button>
+  <div class="brand">设置</div>
+</div>
+
+<div class="wrap">
+
+  <div class="section">
+    <h2>全局主题</h2>
+    <div class="theme-dots" id="theme-dots"></div>
+    <p class="sub" id="cur-theme" style="margin-top:10px;">当前：极光</p>
+    <p class="sub" style="margin-top:4px;">主页 / 编辑 / 设置共用同一套主题。</p>
+  </div>
+
+  <div class="section">
+    <h2>进度条</h2>
+    <div class="field"><label>显示位置</label>
+      <div class="dd" id="prg-pos-dd" data-pos="bottom">
+        <button class="dd-btn" id="prg-pos-btn" type="button">下面</button>
+        <div class="dd-menu" id="prg-menu">
+          <div class="dd-opt" data-v="bottom">下面</div>
+          <div class="dd-opt" data-v="top">上面</div>
+        </div>
+      </div>
+    </div>
+    <div class="field" style="display:flex;align-items:center;gap:10px;margin-top:8px;"><input type="checkbox" id="prg-show" checked style="width:18px;height:18px;"><label>显示进度条</label></div>
+    <div class="field" style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="prg-para" checked style="width:18px;height:18px;"><label>显示段落名</label></div>
+    <p class="sub" style="margin-top:6px;">PPT 文件里用 <code>@progress</code> 配置时会覆盖这里的默认值。</p>
+  </div>
+
+  <div class="section">
+    <h2>文字大小</h2>
+    <div class="field">
+      <label>整体缩放：<span id="fs-val" style="color:var(--accent);">1.00x</span></label>
+      <input type="range" id="fs" min="0.6" max="1.6" step="0.05" value="1.0" style="width:100%;margin-top:8px;">
+    </div>
+    <p class="sub" style="margin-top:6px;">作用于放映 / 预览的文字大小。<code>&lt;0.9</code> 更小，<code>&gt;1.1</code> 更大。</p>
+  </div>
+
+  <div class="section">
+    <h2>自定义主题</h2>
+    <div class="custom-list" id="custom-list"></div>
+    <button class="tbtn" id="new-custom">新建主题</button>
+  </div>
+
+  <div class="section" id="edit-section" style="display:none;">
+    <h2 id="edit-title">新建自定义主题</h2>
+    <div class="field"><label>主题名称</label><input type="text" id="t-name" placeholder="例如：我的配色"></div>
+    <div class="color-row"><label>背景1</label><span class="sw-cur" data-for="t-c1" style="background:#0f2027"></span><span class="sw-hex" id="hx-t-c1">#0F2027</span><input type="color" id="t-c1" value="#0f2027" style="display:none;"></div>
+    <div class="color-row"><label>背景2</label><span class="sw-cur" data-for="t-c2" style="background:#203a43"></span><span class="sw-hex" id="hx-t-c2">#203A43</span><input type="color" id="t-c2" value="#203a43" style="display:none;"></div>
+    <div class="color-row"><label>背景3</label><span class="sw-cur" data-for="t-c3" style="background:#2c5364"></span><span class="sw-hex" id="hx-t-c3">#2C5364</span><input type="color" id="t-c3" value="#2c5364" style="display:none;"></div>
+    <div class="color-row"><label>强调色</label><span class="sw-cur" data-for="t-accent" style="background:#4fc3f7"></span><span class="sw-hex" id="hx-t-accent">#4FC3F7</span><input type="color" id="t-accent" value="#4fc3f7" style="display:none;"></div>
+    <div class="color-row"><label>文字色</label><span class="sw-cur" data-for="t-text" style="background:#f5f7fa"></span><span class="sw-hex" id="hx-t-text">#F5F7FA</span><input type="color" id="t-text" value="#f5f7fa" style="display:none;"></div>
+    <div class="color-row"><label>次要色</label><span class="sw-cur" data-for="t-muted" style="background:#c0ccd6"></span><span class="sw-hex" id="hx-t-muted">#C0CCD6</span><input type="color" id="t-muted" value="#c0ccd6" style="display:none;"></div>
+    <div class="actions" style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
+      <button class="tbtn ghost" id="edit-cancel">取消</button>
+      <button class="tbtn primary" id="edit-save">保存主题</button>
+    </div>
+  </div>
+
+  <div class="actions" style="display:flex;justify-content:space-between;margin-top:8px;">
+    <button class="tbtn ghost" id="about-btn">关于</button>
+    <button class="tbtn primary" id="save-all">保存设置</button>
+  </div>
+</div>
+
+<div class="modal" id="picker-modal">
+  <div class="box">
+    <h2>🎨 自定义颜色</h2>
+    <div class="cp-preview" id="pk-preview"></div>
+    <div class="cp-wheel" id="pk-wheel"><span class="cp-dot" id="pk-wheel-dot"></span></div>
+    <div class="cp-sv" id="pk-sv"><span class="cp-dot" id="pk-sv-dot"></span></div>
+    <div class="cp-rgb">
+      <div class="cp-rgb-row"><label>R</label><input type="range" id="cp-r" min="0" max="255" value="59"><input type="number" id="cp-rv" min="0" max="255" value="59"></div>
+      <div class="cp-rgb-row"><label>G</label><input type="range" id="cp-g" min="0" max="255" value="178"><input type="number" id="cp-gv" min="0" max="255" value="178"></div>
+      <div class="cp-rgb-row"><label>B</label><input type="range" id="cp-b" min="0" max="255" value="247"><input type="number" id="cp-bv" min="0" max="255" value="247"></div>
+    </div>
+    <div class="cp-hex-row"><span class="cp-hex-label">HEX</span><input class="cp-hex" id="pk-hex" maxlength="7" value="#4FC3F7"></div>
+    <div class="actions">
+      <button class="tbtn ghost" id="pk-cancel">取消</button>
+      <button class="tbtn primary" id="pk-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+var editingName = null;
+window.addEventListener('load', function(){
+  PPT.loadSettings();
+  PPT.applyGlobalTheme(PPT.settings.theme || 'aurora');
+  renderGlobal();
+  renderCustom();
+  initProgressUI();
+  setupColorRows();
+  document.getElementById('back-btn').onclick = function(){ pageNav('index.html'); };
+  document.getElementById('about-btn').onclick = function(){ pageNav('about.html'); };
+  document.getElementById('new-custom').onclick = function(){ openEditor(null); };
+  document.getElementById('edit-cancel').onclick = function(){ document.getElementById('edit-section').style.display='none'; editingName=null; };
+  document.getElementById('edit-save').onclick = saveCustom;
+  document.getElementById('save-all').onclick = function(){ writeProgressUI(); PPT.saveSettings(); auroraAlert('已保存到 /sdcard/HTML_PPT/settings.json'); };
+});
+
+function initProgressUI(){
+  var p = PPT.settings.progress || {};
+  document.getElementById('prg-show').checked = !(p.show === false);
+  document.getElementById('prg-para').checked = !(p.para === false);
+  var dd = document.getElementById('prg-pos-dd');
+  if(dd){
+    var v = (p.pos === 'top') ? 'top' : 'bottom';
+    dd.dataset.pos = v;
+    document.getElementById('prg-pos-btn').textContent = (v === 'top') ? '上面' : '下面';
+    bindDropdown();
+  }
+  var fs = PPT.settings.fontScale || 1.0;
+  var el = document.getElementById('fs');
+  if(el){ el.value = fs; document.getElementById('fs-val').textContent = (+fs).toFixed(2)+'x';
+    el.oninput = function(){ document.getElementById('fs-val').textContent = (+this.value).toFixed(2)+'x'; autoSaveSettings(); }; }
+  document.getElementById('prg-show').onchange = autoSaveSettings;
+  document.getElementById('prg-para').onchange = autoSaveSettings;
+}
+function bindDropdown(){
+  var dd = document.getElementById('prg-pos-dd');
+  var btn = document.getElementById('prg-pos-btn');
+  var menu = document.getElementById('prg-menu');
+  var close = function(){ menu.classList.remove('open'); };
+  btn.onclick = function(e){ e.stopPropagation(); menu.classList.toggle('open'); };
+  menu.querySelectorAll('.dd-opt').forEach(function(o){
+    o.onclick = function(e){ e.stopPropagation(); dd.dataset.pos = o.dataset.v; btn.textContent = o.textContent; close(); autoSaveSettings(); };
+  });
+  document.addEventListener('click', close);
+}
+function autoSaveSettings(){
+  writeProgressUI();
+  PPT.saveSettings();
+}
+function writeProgressUI(){
+  var dd = document.getElementById('prg-pos-dd');
+  PPT.settings.progress = {
+    show: document.getElementById('prg-show').checked,
+    pos: dd ? dd.dataset.pos : 'bottom',
+    color: (PPT.settings.progress && PPT.settings.progress.color) || 'accent',
+    para: document.getElementById('prg-para').checked
+  };
+  var el = document.getElementById('fs');
+  if(el) PPT.settings.fontScale = parseFloat(el.value) || 1.0;
+}
+
+function renderGlobal(){
+  var box=document.getElementById('theme-dots'); box.innerHTML='';
+  PPT.listThemeNames().forEach(function(t){
+    var key=t.key||t.name;
+    var d=document.createElement('div');
+    d.className='tdot'+(key===PPT.settings.theme?' sel':'');
+    d.style.background='linear-gradient(135deg,'+t.c1+','+t.c3+')';
+    d.title=t.name;
+    d.onclick=function(){ PPT.settings.theme=key; PPT.applyGlobalTheme(key); PPT.saveSettings(); renderGlobal(); };
+    box.appendChild(d);
+  });
+  var t=PPT.getTheme(PPT.settings.theme||'aurora');
+  document.getElementById('cur-theme').textContent='当前：'+(t.name||PPT.settings.theme);
+}
+
+function renderCustom(){
+  var list=document.getElementById('custom-list'); list.innerHTML='';
+  var keys=Object.keys(PPT.settings.customThemes||{});
+  if(!keys.length){ list.innerHTML='<p class="sub" style="color:var(--muted);">还没有自定义主题</p>'; }
+  keys.forEach(function(k){
+    var t=PPT.settings.customThemes[k];
+    var item=document.createElement('div'); item.className='custom-item';
+    item.innerHTML='<span class="dots"><span style="background:'+t.c1+'"></span><span style="background:'+t.c2+'"></span><span style="background:'+t.c3+'"></span></span>' +
+      '<span class="nm">'+k+'</span>' +
+      '<button class="tbtn mini" data-a="edit">编辑</button>' +
+      '<button class="tbtn mini del" data-a="del">删除</button>';
+    item.querySelector('[data-a=edit]').onclick=function(){ openEditor(k); };
+    item.querySelector('[data-a=del]').onclick=function(){ auroraConfirm('删除主题「'+k+'」？', function(){ PPT.deleteCustomTheme(k); renderCustom(); renderGlobal(); }); };
+    list.appendChild(item);
+  });
+}
+
+function openEditor(name){
+  editingName=name||null;
+  var t = name? PPT.settings.customThemes[name] : null;
+  document.getElementById('edit-section').style.display='block';
+  document.getElementById('edit-title').textContent = name? ('编辑主题：'+name) : '新建自定义主题';
+  document.getElementById('t-name').value = name? name : '';
+  document.getElementById('t-c1').value = t? t.c1 : '#0f2027';
+  document.getElementById('t-c2').value = t? t.c2 : '#203a43';
+  document.getElementById('t-c3').value = t? t.c3 : '#2c5364';
+  document.getElementById('t-accent').value = t? t.accent : '#4fc3f7';
+  document.getElementById('t-text').value = t? t.text : '#f5f7fa';
+  document.getElementById('t-muted').value = t? t.muted : '#c0ccd6';
+  setupColorRows();
+  window.scrollTo({top:document.getElementById('edit-section').offsetTop, behavior:'smooth'});
+}
+
+function saveCustom(){
+  var name=document.getElementById('t-name').value.trim();
+  if(!name){ alert('请输入主题名称'); return; }
+  var theme={
+    c1:document.getElementById('t-c1').value,
+    c2:document.getElementById('t-c2').value,
+    c3:document.getElementById('t-c3').value,
+    accent:document.getElementById('t-accent').value,
+    text:document.getElementById('t-text').value,
+    muted:document.getElementById('t-muted').value
+  };
+  PPT.saveCustomTheme(name, theme);
+  document.getElementById('edit-section').style.display='none';
+  editingName=null;
+  renderCustom();
+  renderGlobal();
+  auroraAlert('已保存主题「'+name+'」到 /sdcard/HTML_PPT/themes/');
+}
+
+function setupColorRows(){
+  document.querySelectorAll('.sw-cur').forEach(function(cur){
+    var cid=cur.dataset.for; var inp=document.getElementById(cid); var hexEl=document.getElementById('hx-'+cid);
+    function refresh(){ if(inp){ cur.style.background=inp.value; } if(hexEl){ hexEl.textContent=(inp?inp.value.toUpperCase():''); } }
+    cur.onclick=function(e){ e.stopPropagation(); openColorPicker(cid); };
+    if(hexEl) hexEl.onclick=function(e){ e.stopPropagation(); openColorPicker(cid); };
+    refresh();
+  });
+}
+var pickTarget=null, pickOrig='#4fc3f7', pickH=0, pickS=1, pickV=1;
+function hexToRgb(hex){ hex=hex.replace('#',''); if(hex.length===3) hex=hex.split('').map(function(c){return c+c;}).join(''); var n=parseInt(hex,16); return [n>>16&255, n>>8&255, n&255]; }
+function rgbToHex(r,g,b){ function h(x){ x=Math.max(0,Math.min(255,Math.round(x))); return ('0'+x.toString(16)).slice(-2); } return '#'+h(r)+h(g)+h(b); }
+function rgbToHsv(r,g,b){ r/=255; g/=255; b/=255; var mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn, hh=0, s=0, v=mx; if(d){ if(mx===r) hh=((g-b)/d)%6; else if(mx===g) hh=(b-r)/d+2; else hh=(r-g)/d+4; hh*=60; if(hh<0) hh+=360; s=d/mx; } return [hh, s, v]; }
+function hsvToRgb(hh, s, v){ var i=Math.floor(hh/60)%6, f=hh/60-Math.floor(hh/60), p=v*(1-s), q=v*(1-f*s), t=v*(1-(1-f)*s), r, g, b; switch(i){ case 0:r=v; g=t; b=p; break; case 1:r=q; g=v; b=p; break; case 2:r=p; g=v; b=t; break; case 3:r=p; g=q; b=v; break; case 4:r=t; g=p; b=v; break; case 5:r=v; g=p; b=q; break; } return [r*255, g*255, b*255]; }
+function openColorPicker(cid){
+  pickTarget=document.getElementById(cid);
+  var val=(pickTarget && pickTarget.value)||'#4fc3f7'; if(!/^#[0-9a-fA-F]{6}$/.test(val)) val='#4fc3f7';
+  pickOrig=val;
+  var rgb=hexToRgb(val), hsv=rgbToHsv(rgb[0], rgb[1], rgb[2]); pickH=hsv[0]; pickS=hsv[1]; pickV=hsv[2];
+  ['cp-r','cp-g','cp-b'].forEach(function(id,i){ document.getElementById(id).value=rgb[i]; });
+  ['cp-rv','cp-gv','cp-bv'].forEach(function(id,i){ document.getElementById(id).value=rgb[i]; });
+  document.getElementById('pk-hex').value=val;
+  document.getElementById('pk-preview').style.background=val;
+  syncSvBg(); syncWheelUI(); syncSvUI();
+  document.getElementById('picker-modal').classList.add('show');
+  bindPicker();
+}
+function syncWheelUI(){
+  var dot=document.getElementById('pk-wheel-dot');
+  var rad=44, ang=(pickH-90)*Math.PI/180;
+  dot.style.left=(50+Math.cos(ang)*rad)+'%'; dot.style.top=(50+Math.sin(ang)*rad)+'%'; dot.style.background='hsl('+pickH+',100%,50%)';
+}
+function syncSvBg(){ document.getElementById('pk-sv').style.background='linear-gradient(to top,#000,transparent),linear-gradient(to right,hsl('+pickH+',100%,50%),#fff)'; }
+function syncSvUI(){
+  var dot=document.getElementById('pk-sv-dot');
+  dot.style.left=(pickS*100)+'%'; dot.style.top=((1-pickV)*100)+'%'; dot.style.background=document.getElementById('pk-preview').style.background;
+}
+function applyColor(){
+  var rgb=hsvToRgb(pickH, pickS, pickV); var hex=rgbToHex(rgb[0], rgb[1], rgb[2]);
+  document.getElementById('pk-hex').value=hex;
+  document.getElementById('pk-preview').style.background=hex;
+  if(pickTarget){ pickTarget.value=hex; var cur=document.querySelector('.sw-cur[data-for="'+pickTarget.id+'"]'); if(cur) cur.style.background=hex; }
+  var hexEl=document.getElementById('hx-'+(pickTarget?pickTarget.id:'')); if(hexEl) hexEl.textContent=hex.toUpperCase();
+  ['cp-r','cp-g','cp-b'].forEach(function(id,i){ document.getElementById(id).value=Math.round(rgb[i]); });
+  ['cp-rv','cp-gv','cp-bv'].forEach(function(id,i){ document.getElementById(id).value=Math.round(rgb[i]); });
+  syncWheelUI(); syncSvUI();
+}
+function pickWheelFromEvent(e){ var wheel=document.getElementById('pk-wheel'); var rect=wheel.getBoundingClientRect(); var mx=rect.left+rect.width/2, my=rect.top+rect.height/2; var dx=e.clientX-mx, dy=e.clientY-my; var ang=Math.atan2(dy,dx)*180/Math.PI+90; if(ang<0) ang+=360; pickH=ang; applyColor(); }
+function pickSvFromEvent(e){ var sv=document.getElementById('pk-sv'); var rect=sv.getBoundingClientRect(); var s=(e.clientX-rect.left)/rect.width, v=1-(e.clientY-rect.top)/rect.height; pickS=Math.max(0,Math.min(1,s)); pickV=Math.max(0,Math.min(1,v)); applyColor(); }
+function bindPicker(){
+  var wheel=document.getElementById('pk-wheel'), sv=document.getElementById('pk-sv');
+  var ok=document.getElementById('pk-ok'), cancel=document.getElementById('pk-cancel'), modal=document.getElementById('picker-modal');
+  wheel.onpointerdown=function(e){ e.preventDefault(); pickWheelFromEvent(e); if(wheel.setPointerCapture) wheel.setPointerCapture(e.pointerId); };
+  wheel.onpointermove=function(e){ if(e.buttons||e.pointerType==='touch') pickWheelFromEvent(e); };
+  sv.onpointerdown=function(e){ e.preventDefault(); pickSvFromEvent(e); if(sv.setPointerCapture) sv.setPointerCapture(e.pointerId); };
+  sv.onpointermove=function(e){ if(e.buttons||e.pointerType==='touch') pickSvFromEvent(e); };
+  document.getElementById('pk-hex').oninput=function(){ var t=this.value.trim(); if(!/^#?[0-9a-fA-F]{6}$/.test(t)) return; if(t[0]!=='#') t='#'+t; var rgb=hexToRgb(t), hsv=rgbToHsv(rgb[0], rgb[1], rgb[2]); pickH=hsv[0]; pickS=hsv[1]; pickV=hsv[2]; syncSvBg(); applyColor(); };
+  var syncFromRgb=function(){ var r=+document.getElementById('cp-r').value||0, g=+document.getElementById('cp-g').value||0, b=+document.getElementById('cp-b').value||0; ['cp-rv','cp-gv','cp-bv'].forEach(function(id,i){ document.getElementById(id).value=[r,g,b][i]; }); var hsv=rgbToHsv(r,g,b); pickH=hsv[0]; pickS=hsv[1]; pickV=hsv[2]; syncSvBg(); applyColor(); };
+  ['cp-r','cp-g','cp-b','cp-rv','cp-gv','cp-bv'].forEach(function(id){ document.getElementById(id).oninput=syncFromRgb; });
+  ok.onclick=function(){ closePicker(false); };
+  cancel.onclick=function(){ closePicker(true); };
+  modal.onclick=function(e){ if(e.target===modal) closePicker(); };
+}
+function closePicker(cancel){
+  if(cancel && pickTarget){
+    pickTarget.value=pickOrig;
+    var cur=document.querySelector('.sw-cur[data-for="'+pickTarget.id+'"]'); if(cur) cur.style.background=pickOrig;
+    var hexEl=document.getElementById('hx-'+pickTarget.id); if(hexEl) hexEl.textContent=pickOrig.toUpperCase();
+  }
+  document.getElementById('picker-modal').classList.remove('show');
+}
+</script>
+</body>
+</html>

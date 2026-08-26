@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>HTML PPT - 主页</title>
+<link rel="stylesheet" href="theme.css">
+</head>
+<body class="noselect">
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>HTML PPT</div>
+  <div class="spacer"></div>
+  <div class="theme-dots" id="theme-dots" title="全局主题"></div>
+  <button class="tbtn primary" id="new-btn">新建</button>
+  <button class="tbtn" id="settings-btn">设置</button>
+  <div id="dots-panel"></div>
+</div>
+
+<div class="wrap">
+  <div class="title-row">
+    <h1 class="page-title">我的演示</h1>
+    <div class="sortbtns">
+      <button class="tbtn mini" id="sort-key">名称</button>
+      <button class="tbtn mini" id="sort-dir">▲</button>
+    </div>
+  </div>
+  <p class="sub">在 /sdcard/HTML_PPT/PPT 文件夹下，点击打开即可编辑或播放</p>
+  <input type="search" class="search" id="search" placeholder="搜索演示名称…">
+  <div class="ppt-grid" id="list"></div>
+</div>
+
+<!-- 新建弹窗 -->
+<div class="modal" id="modal">
+  <div class="box">
+    <h2 id="modal-title">新建演示</h2>
+    <div class="field"><label>名称</label><input type="text" id="name-input" placeholder="例如：技术分享"></div>
+    <div class="actions">
+      <button class="tbtn ghost" id="cancel-btn">取消</button>
+      <button class="tbtn primary" id="ok-btn">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+var list = [];
+window.addEventListener('load', function(){
+  PPT.loadSettings();
+  PPT.applyGlobalTheme(PPT.settings.theme || 'aurora');
+  renderThemeDots();
+  renderList();
+  var sk=document.getElementById('sort-key'); if(sk) sk.onclick=function(){ sortKey=(sortKey==='name')?'time':'name'; renderList(); };
+  var sd=document.getElementById('sort-dir'); if(sd) sd.onclick=function(){ sortAsc=!sortAsc; renderList(); };
+  var se=document.getElementById('search'); if(se) se.oninput=function(){ searchQ=this.value; renderList(); };
+  document.addEventListener('click', function(e){
+    var panel = document.getElementById('dots-panel');
+    if(panel && panel.classList.contains('show') && !e.target.closest('#dots-panel') && !e.target.closest('.tdot.more')){
+      panel.classList.remove('show');
+    }
+  });
+  document.getElementById('new-btn').onclick = function(){ openModal('新建演示', '', 'new'); };
+  document.getElementById('settings-btn').onclick = function(){ pageNav('settings.html'); };
+  document.getElementById('cancel-btn').onclick = closeModal;
+  document.getElementById('ok-btn').onclick = onOk;
+});
+function renderThemeDots(){
+  var box = document.getElementById('theme-dots'); box.innerHTML='';
+  var names = PPT.listThemeNames();
+  var MAX = 6;
+  var shown = names.slice(0, MAX);
+  shown.forEach(function(t){
+    var key = t.key || t.name;
+    var d = document.createElement('div');
+    d.className = 'tdot' + (key===PPT.settings.theme ? ' sel':'');
+    d.style.background = 'linear-gradient(135deg,'+t.c1+','+t.c3+')';
+    d.title = t.name;
+    d.onclick = function(){
+      PPT.settings.theme = key;
+      PPT.applyGlobalTheme(key);
+      PPT.saveSettings();
+      renderThemeDots();
+    };
+    box.appendChild(d);
+  });
+  if(names.length > MAX){
+    var more = document.createElement('div');
+    more.className = 'tdot more'; more.textContent = '⋯';
+    more.onclick = function(e){ e.stopPropagation(); toggleDotsPanel(); };
+    box.appendChild(more);
+  }
+  var panel = document.getElementById('dots-panel');
+  if(panel){
+    panel.innerHTML = '';
+    names.forEach(function(t){
+      var key = t.key || t.name;
+      var c = document.createElement('div');
+      c.className = 'theme-chip' + (key===PPT.settings.theme ? ' sel':'');
+      var dot = document.createElement('span'); dot.className='chipdot';
+      dot.style.background = 'linear-gradient(135deg,'+t.c1+','+t.c3+')';
+      var lbl = document.createElement('span'); lbl.textContent = t.name;
+      c.appendChild(dot); c.appendChild(lbl);
+      c.onclick = function(){
+        PPT.settings.theme = key;
+        PPT.applyGlobalTheme(key);
+        PPT.saveSettings();
+        renderThemeDots();
+        toggleDotsPanel();
+      };
+      panel.appendChild(c);
+    });
+  }
+}
+function toggleDotsPanel(){
+  var panel = document.getElementById('dots-panel');
+  if(panel) panel.classList.toggle('show');
+}
+var sortKey='name';
+var sortAsc=true;
+var searchQ='';
+function fmtTime(ms){
+  if(!ms) return '—';
+  var d=new Date(ms);
+  function p(n){ return (n<10?'0':'')+n; }
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function renderList(){
+  var raw=[];
+  try{
+    if(window.Android && Android.listPptDetail){ raw=JSON.parse(Android.listPptDetail()); }
+    else { raw=JSON.parse(Android.listPpt()).map(function(n){ return {name:n, created:0, modified:0}; }); }
+  }catch(e){ raw=[]; }
+  var list=raw.slice();
+  if(searchQ){
+    var q=searchQ.toLowerCase();
+    list=list.filter(function(it){ return (it.name||'').toLowerCase().indexOf(q)>=0; });
+  }
+  list.sort(function(a,b){
+    if(sortKey==='time'){ var ka=a.modified||0,kb=b.modified||0; return sortAsc?(ka-kb):(kb-ka); }
+    var r=(a.name||'').localeCompare(b.name||'','zh'); return sortAsc?r:-r;
+  });
+  var grid=document.getElementById('list'); grid.innerHTML='';
+  if(!list.length){ grid.innerHTML='<div class="empty">还没有演示，点右上角「新建」开始</div>'; updateSortBtn(); return; }
+  list.forEach(function(it){
+    var name=it.name; var title=name.replace(/\.txt$/,'');
+    var card=document.createElement('div'); card.className='ppt-card';
+    card.innerHTML='<h3>'+title+'</h3><div class="muted">'+name+'</div>'+
+      '<div class="meta">创建 '+fmtTime(it.created)+' · 修改 '+fmtTime(it.modified)+'</div>'+
+      '<div class="row">'+
+      '<button class="tbtn mini" data-act="edit">编辑</button>'+
+      '<button class="tbtn mini" data-act="play">播放</button>'+
+      '<button class="tbtn mini" data-act="rename">重命名</button>'+
+      '<button class="tbtn mini del" data-act="del">删除</button>'+
+      '</div>';
+    card.querySelectorAll('button').forEach(function(btn){
+      btn.onclick=function(){ var a=btn.dataset.act;
+        if(a==='edit'){ if(window.Android && Android.enterTool) Android.enterTool(); pageNav('file:///sdcard/Download/HTML_PPT/index.html?name='+encodeURIComponent(name)); }
+        else if(a==='play'){ if(window.Android && Android.enterTool) Android.enterTool(); pageNav('file:///sdcard/Download/HTML_PPT/index.html?name='+encodeURIComponent(name)+'&play=1'); }
+        else if(a==='rename') rename(name);
+        else if(a==='del') del(name);
+      };
+    });
+    var moved=false;
+    card.addEventListener('touchstart',function(){ moved=false; },{passive:true});
+    card.addEventListener('touchmove',function(){ moved=true; },{passive:true});
+    card.onclick=function(e){
+      if(moved){ moved=false; return; }
+      if(e.target && e.target.closest && e.target.closest('button')) return;
+      if(window.Android && Android.enterTool) Android.enterTool();
+      pageNav('file:///sdcard/Download/HTML_PPT/index.html?name='+encodeURIComponent(name));
+    };
+    grid.appendChild(card);
+  });
+  updateSortBtn();
+}
+function updateSortBtn(){
+  var k=document.getElementById('sort-key'); if(k) k.textContent=(sortKey==='name'?'名称':'时间');
+  var d=document.getElementById('sort-dir'); if(d) d.textContent=(sortAsc?'▲':'▼');
+}
+
+/* modal */
+var modalMode='new', currentName='';
+function openModal(title, name, mode){
+  modalMode=mode; currentName=name;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('name-input').value = name;
+  document.getElementById('modal').classList.add('show');
+  setTimeout(function(){ document.getElementById('name-input').focus(); },50);
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+function onOk(){
+  var name = document.getElementById('name-input').value.trim();
+  if(!name){ auroraAlert('名称不能为空'); return; }
+  if(modalMode==='new'){ Android.newPpt(name); renderList(); }
+  else if(modalMode==='rename'){ Android.renamePpt(currentName, name); renderList(); }
+  closeModal();
+}
+function rename(name){ openModal('重命名', name.replace(/\.txt$/,''), 'rename'); }
+function del(name){ auroraConfirm('删除「'+name+'」？', function(){ Android.deletePpt(name); renderList(); }); }
+</script>
+</body>
+</html>

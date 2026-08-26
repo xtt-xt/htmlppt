@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>关于 - HTML PPT</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  .about{text-align:center; padding-top:12px;}
+  .about .logo{width:84px;height:84px;border-radius:22px;margin:6px auto 16px;background:linear-gradient(135deg,var(--bg1),var(--bg3));display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  .about .nm{font-size:22px;font-weight:800;letter-spacing:.5px;}
+  .about .ver{color:var(--muted);font-size:13px;margin:4px 0 18px;}
+  .about .sect{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;text-align:left;}
+  .about .sect h3{font-size:15px;margin-bottom:10px;}
+  .about .sect li{font-size:13px;color:var(--muted);margin:5px 0;line-height:1.5;list-style:none;}
+  .about .sect li::before{content:"· ";color:var(--accent);}
+  .about .sect .k{color:var(--text);}
+  .about .sect code{background:rgba(0,0,0,.25);border-radius:5px;padding:1px 5px;font-size:12px;}
+  .about .sect p{font-size:13px;color:var(--muted);line-height:1.6;}
+</style>
+</head>
+<body class="noselect">
+
+<div class="topbar">
+  <button class="tbtn ghost" id="back-btn">返回</button>
+  <div class="brand">关于</div>
+</div>
+
+<div class="wrap">
+  <div class="about">
+    <div class="logo">📽️</div>
+    <div class="nm">HTML PPT</div>
+    <div class="ver">版本 1.0.0</div>
+
+    <div class="sect">
+      <h3>版本信息</h3>
+      <p id="ver-info" style="white-space:pre-line;">App 版本：1.0.0<br>热更新版本：2026.08.26.1</p>
+    </div>
+
+    <button class="tbtn primary" id="sync-btn" style="width:100%;margin-bottom:14px;">同步内置 HTML</button>
+
+    <div class="sect">
+      <h3>什么是 HTML PPT</h3>
+      <p>用纯文本编写幻灯片，一次编写即可放映、可导出单文件 HTML。<br>数据目录：<code>/sdcard/HTML_PPT/</code></p>
+    </div>
+
+    <div class="sect">
+      <h3>功能</h3>
+      <ul>
+        <li><span class="k">分页 / 富文本</span> — <code>---</code> 分隔页，支持标题、加粗、列表、链接、图片</li>
+        <li><span class="k">多主题</span> — 内置 + 自定义主题，全局一键切换</li>
+        <li><span class="k">分段进度条</span> — 可配置颜色、位置、段落比例</li>
+        <li><span class="k">资讯卡片</span> — 自定义颜色/纹理，竖屏 1 列横屏 2 列</li>
+        <li><span class="k">文字缩放</span> — 全局设置 + <code>@font-scale</code> 覆盖</li>
+        <li><span class="k">导出 HTML</span> — 单文件独立放映，本地图片自动内嵌 base64</li>
+      </ul>
+    </div>
+
+    <div class="sect">
+      <h3>技术支持</h3>
+      <p>基于 Android WebView + 原生桥接构建，纯本地运行，无网络依赖。</p>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  PPT.loadSettings();
+  PPT.applyGlobalTheme(PPT.settings.theme || 'aurora');
+  // 版本信息
+  var and = window.Android;
+  var HOT_VERSION = '2026.08.26.1';
+  var verBox = document.getElementById('ver-info');
+  var appVer = '1.0.0';
+  if (and && and.getVersion) {
+    try { var v = JSON.parse(and.getVersion()); appVer = v.app || appVer; } catch (e) { }
+  }
+  verBox.textContent = 'App 版本：' + appVer + '\n热更新版本：' + HOT_VERSION;
+  // 同步内置 HTML
+  document.getElementById('sync-btn').onclick = function(){
+    window.auroraConfirm('同步内置 HTML 会把界面文件覆盖为 App 内置默认版本，可能回退你之前的【热更新】改动。确定继续？', function(){
+      var btn = document.getElementById('sync-btn');
+      btn.textContent = '同步中…'; btn.disabled = true;
+      setTimeout(function(){
+        var r = (and && and.syncBuiltin) ? and.syncBuiltin() : 'no-bridge';
+        btn.textContent = '同步内置 HTML'; btn.disabled = false;
+        window.auroraAlert('同步完成：' + r);
+      }, 60);
+    });
+  };
+  document.getElementById('back-btn').onclick = function(){ pageNav('settings.html'); };
+</script>
+</body>
+</html>
