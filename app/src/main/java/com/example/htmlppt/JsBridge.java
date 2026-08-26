@@ -211,4 +211,86 @@ public class JsBridge {
             return "err:" + e.getMessage();
         }
     }
+
+    /* ---- 更新 / 网络 ---- */
+    @JavascriptInterface
+    public String checkRemote(String url) {
+        if (url == null || url.trim().isEmpty()) return "";
+        try {
+            java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            c.setConnectTimeout(15000); c.setReadTimeout(15000);
+            c.setRequestMethod("GET");
+            c.setRequestProperty("User-Agent", "Mozilla/5.0");
+            int code = c.getResponseCode();
+            if (code >= 200 && code < 300) {
+                java.io.InputStream in = c.getInputStream();
+                java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                byte[] b = new byte[8192]; int n;
+                while ((n = in.read(b)) > 0) bos.write(b, 0, n);
+                return bos.toString("UTF-8");
+            }
+            return "";
+        } catch (Exception e) { return ""; }
+    }
+
+    @JavascriptInterface
+    public String downloadApply(String url, String targetDir) {
+        try {
+            java.io.File dir = new java.io.File(targetDir);
+            if (!dir.exists()) dir.mkdirs();
+            java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            c.setConnectTimeout(20000); c.setReadTimeout(20000);
+            c.setRequestMethod("GET");
+            c.setRequestProperty("User-Agent", "Mozilla/5.0");
+            int code = c.getResponseCode();
+            if (!(code >= 200 && code < 300)) return "err:http " + code;
+            java.io.InputStream in = c.getInputStream();
+            return unzipStream(in, dir);
+        } catch (Exception e) { return "err:" + e.getMessage(); }
+    }
+
+    @JavascriptInterface
+    public String importZip(String zipPath) {
+        try {
+            java.io.File f = new java.io.File(zipPath);
+            if (!f.exists()) return "err:not found " + zipPath;
+            java.io.File dir = FileManager.WWW_DIR;
+            if (!dir.exists()) dir.mkdirs();
+            try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
+                return unzipStream(in, dir);
+            }
+        } catch (Exception e) { return "err:" + e.getMessage(); }
+    }
+
+    private String unzipStream(java.io.InputStream in, java.io.File dir) throws Exception {
+        int count = 0;
+        java.util.zip.ZipInputStream zin = new java.util.zip.ZipInputStream(in);
+        java.util.zip.ZipEntry entry;
+        while ((entry = zin.getNextEntry()) != null) {
+            String name = entry.getName();
+            if (name == null || name.contains("..")) continue;
+            java.io.File out = new java.io.File(dir, name);
+            if (entry.isDirectory()) { out.mkdirs(); continue; }
+            java.io.File parent = out.getParentFile();
+            if (parent != null) parent.mkdirs();
+            try (java.io.FileOutputStream os = new java.io.FileOutputStream(out)) {
+                byte[] b = new byte[8192]; int n;
+                while ((n = zin.read(b)) > 0) os.write(b, 0, n);
+            }
+            count++;
+            zin.closeEntry();
+        }
+        zin.close();
+        return "ok:" + count;
+    }
+
+    @JavascriptInterface
+    public void openUrl(String url) {
+        if (url == null || url.trim().isEmpty()) return;
+        try {
+            android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url));
+            i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(i);
+        } catch (Exception e) { }
+    }
 }
