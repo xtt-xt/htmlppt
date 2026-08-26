@@ -63,6 +63,8 @@ window.addEventListener('load', function(){
   document.getElementById('settings-btn').onclick = function(){ pageNav('settings.html'); };
   document.getElementById('cancel-btn').onclick = closeModal;
   document.getElementById('ok-btn').onclick = onOk;
+  // 每天首次打开静默检查更新
+  if(window.autoCheckUpdate) window.autoCheckUpdate();
 });
 function renderThemeDots(){
   var box = document.getElementById('theme-dots'); box.innerHTML='';

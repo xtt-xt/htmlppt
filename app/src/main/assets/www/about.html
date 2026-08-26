@@ -73,24 +73,21 @@
   PPT.applyGlobalTheme(PPT.settings.theme || 'aurora');
   // 版本信息
   var and = window.Android;
-  var HOT_VERSION = '2026.08.26.2';
+  var HOT_VERSION = window.HOT_VERSION || '2026.08.26.4';
   var verBox = document.getElementById('ver-info');
   var appVer = '1.0.0';
   if (and && and.getVersion) {
     try { var v = JSON.parse(and.getVersion()); appVer = v.app || appVer; } catch (e) { }
   }
   verBox.textContent = 'v' + appVer + ' (h' + HOT_VERSION + ')';
-  var CHECK_URLS = [
-  'https://cdn.jsdelivr.net/gh/xtt-xt/htmlppt@main/update/latest.json',
-  'https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/latest.json'
-];
+  var UPDATE_URL = 'https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/latest.json';
   var WWW_DIR = '/sdcard/HTML_PPT/www';
   var ZIP_PATH = '/sdcard/HTML_PPT/Download/hotpatch.zip';
   // 检查更新
   document.getElementById('check-btn').onclick = function(){
     var btn = this; btn.textContent = '检查中…';
     setTimeout(function(){
-      var body = ''; if (and && and.checkRemote) { for (var i=0;i<CHECK_URLS.length;i++) { body = and.checkRemote(CHECK_URLS[i]); if (body) break; } }
+      var body = (and && and.checkRemote) ? and.checkRemote(UPDATE_URL) : '';
       btn.textContent = '检查更新';
       if (!body) { window.auroraAlert('无法获取更新信息（请检查网络或更新源）'); return; }
       var info; try { info = JSON.parse(body); } catch (e) { window.auroraAlert('更新数据解析失败'); return; }
@@ -103,7 +100,7 @@
           var r = (and && and.downloadApply) ? and.downloadApply(info.hot_url || '', WWW_DIR) : 'err:no';
           if (r && r.indexOf('ok:') === 0) {
             window.auroraAlert('热更新应用成功：' + r);
-            setTimeout(function(){ location.reload(); }, 600);
+            setTimeout(function(){ if (window.Android && window.Android.goToHome) window.Android.goToHome(); else location.href='index.html'; }, 600);
           } else {
             window.auroraAlert('自动下载失败（' + r + '）\n请下载 hotpatch.zip 放到 /sdcard/HTML_PPT/Download/ 后点「导入热更新包」。');
           }
@@ -118,7 +115,7 @@
     var r = (and && and.importZip) ? and.importZip(ZIP_PATH) : 'err:no';
     if (r && r.indexOf('ok:') === 0) {
       window.auroraAlert('导入成功：' + r);
-      setTimeout(function(){ location.reload(); }, 600);
+      setTimeout(function(){ if (window.Android && window.Android.goToHome) window.Android.goToHome(); else location.href='index.html'; }, 600);
     } else {
       window.auroraAlert('导入失败（' + r + '）\n请把 hotpatch.zip 放到 /sdcard/HTML_PPT/Download/');
     }

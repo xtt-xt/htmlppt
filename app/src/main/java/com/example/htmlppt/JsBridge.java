@@ -214,8 +214,34 @@ public class JsBridge {
 
     /* ---- 更新 / 网络 ---- */
     @JavascriptInterface
-    public String checkRemote(String url) {
+    public String checkRemote(final String url) {
         if (url == null || url.trim().isEmpty()) return "";
+        final String[] res = { "" };
+        Thread t = new Thread(new Net(url, null, res, 0));
+        t.start();
+        try { t.join(20000); } catch (Exception e) { }
+        return res[0];
+    }
+
+    @JavascriptInterface
+    public String downloadApply(final String url, final String targetDir) {
+        final String[] res = { "err:timeout" };
+        Thread t = new Thread(new Net(url, targetDir, res, 1));
+        t.start();
+        try { t.join(30000); } catch (Exception e) { }
+        return res[0];
+    }
+
+    private static class Net implements Runnable {
+        private final String a, b; private final String[] out; private final int op;
+        Net(String a, String b, String[] out, int op) { this.a = a; this.b = b; this.out = out; this.op = op; }
+        public void run() {
+            if (op == 0) out[0] = doGet(a);
+            else if (op == 1) out[0] = doDownload(a, b);
+        }
+    }
+
+    private static String doGet(String url) {
         try {
             java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
             c.setConnectTimeout(15000); c.setReadTimeout(15000);
@@ -229,12 +255,11 @@ public class JsBridge {
                 while ((n = in.read(b)) > 0) bos.write(b, 0, n);
                 return bos.toString("UTF-8");
             }
-            return "";
-        } catch (Exception e) { return ""; }
+            return "ERR:http" + code;
+        } catch (Exception e) { return "ERR:" + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()); }
     }
 
-    @JavascriptInterface
-    public String downloadApply(String url, String targetDir) {
+    private static String doDownload(String url, String targetDir) {
         try {
             java.io.File dir = new java.io.File(targetDir);
             if (!dir.exists()) dir.mkdirs();
@@ -262,7 +287,7 @@ public class JsBridge {
         } catch (Exception e) { return "err:" + e.getMessage(); }
     }
 
-    private String unzipStream(java.io.InputStream in, java.io.File dir) throws Exception {
+    private static String unzipStream(java.io.InputStream in, java.io.File dir) throws Exception {
         int count = 0;
         java.util.zip.ZipInputStream zin = new java.util.zip.ZipInputStream(in);
         java.util.zip.ZipEntry entry;

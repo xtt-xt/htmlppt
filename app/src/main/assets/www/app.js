@@ -283,3 +283,30 @@ window.pageNav = function(url){
   document.body.classList.add('fade-out');
   setTimeout(function(){ location.href = url; }, 100);
 };
+
+/* ---- 每天首次打开自动检查更新 ---- */
+window.HOT_VERSION = window.HOT_VERSION || '2026.08.26.4';
+window.CHECK_URLS = [
+  'https://cdn.jsdelivr.net/gh/xtt-xt/htmlppt@main/update/latest.json',
+  'https://raw.githubusercontent.com/xtt-xt/htmlppt/main/update/latest.json'
+];
+function __appVer(){ if(window.Android && window.Android.getVersion){ try{ return JSON.parse(window.Android.getVersion()).app || '1.0.0'; }catch(e){} } return '1.0.0'; }
+window.autoCheckUpdate = function(){
+  try { var t = localStorage.getItem('hp_last_check'); var today = new Date().toISOString().slice(0,10); if(t === today) return; localStorage.setItem('hp_last_check', today); } catch(e){}
+  var and = window.Android;
+  if(!and || !and.checkRemote) return;
+  var body = '';
+  for(var i=0;i<window.CHECK_URLS.length;i++){ body = and.checkRemote(window.CHECK_URLS[i]); if(body) break; }
+  if(!body || body.indexOf('ERR:')===0) return;
+  var info; try { info = JSON.parse(body); } catch(e){ return; }
+  var appVer = __appVer(), curHot = window.HOT_VERSION;
+  if(info.app !== appVer){
+    auroraConfirm('发现新主版本 v' + info.app + '（当前 v' + appVer + '），是否前往下载？', function(){ if(and.openUrl) and.openUrl(info.apk_url || ''); });
+  } else if(info.hot && info.hot !== curHot){
+    auroraConfirm('发现热更新 h' + info.hot + '（当前 h' + curHot + '）\n\n【更新内容】\n' + info.notes + '\n\n是否下载并应用？', function(){
+      var r = and.downloadApply(info.hot_url || '', '/sdcard/HTML_PPT/www');
+      if(r && r.indexOf('ok:') === 0){ auroraAlert('更新成功：' + r); setTimeout(function(){ if(and.goToHome) and.goToHome(); else location.reload(); }, 600); }
+      else { auroraAlert('下载失败：' + r); }
+    });
+  }
+};
